@@ -1,0 +1,15 @@
+*.sh
+*.txt
+*.pgn
+
+Blobfish
+BlobfishNew
+engine
+engineNew
+
+cmake-build-debug/
+.idea/
+.vscode/
+
+*.gcda
+*.gcno
