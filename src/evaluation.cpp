@@ -202,6 +202,29 @@ int positionalScore(Board& board, Color color, bool endgame){
     return score;
 }
 
+
+int rookOpenFile(Board& board) {
+    int score = 0;
+    uint64_t rooks = board.getPieceBitboard(BLACK,ROOK) | board.getPieceBitboard(WHITE, ROOK);
+    const uint64_t pawns[2] = {board.getPieceBitboard(WHITE,PAWN), board.getPieceBitboard(BLACK,PAWN)};
+    while (rooks) {
+        int pos = popBit(rooks);
+        Color color = color_of(board.getPieceOnSquare(pos));
+        Color otherColor = color==WHITE?BLACK:WHITE;
+        int column = pos%8;
+        if ((BOARD_COLUMNS[column]&pawns[color])==0) {
+            if ((BOARD_COLUMNS[column]&pawns[otherColor])==0) {
+                if (color==WHITE) score += 12;
+                else score -= 12;
+            } else {
+                if (color==WHITE) score += 6;
+                else score -= 6;
+            }
+        }
+    }
+    return score;
+}
+
 int pawnStructure(Board& board) {
     int score = 0;
 
@@ -263,6 +286,10 @@ int evaluatePosition(Board& board){
 
     openingScore += positionalScore(board, WHITE)-positionalScore(board, BLACK);
     endgameScore += positionalScore(board, WHITE, true) - positionalScore(board, BLACK, true);
+
+    int rook = rookOpenFile(board);
+    openingScore += rook;
+    endgameScore += rook * 3 / 2;
 
     openingScore += score;
     endgameScore += score;
