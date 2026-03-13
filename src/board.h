@@ -71,7 +71,7 @@ class MoveList {
         return moves[size];
     }
 
-    void sortMoves(const int scores[256]);
+    void sortMoves(int scores[256]);
 
 };
 

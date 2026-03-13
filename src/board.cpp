@@ -12,16 +12,19 @@
 #include <immintrin.h>
 
 
-void MoveList::sortMoves(const int scores[256]) {
+void MoveList::sortMoves(int scores[256]) {
     if (size<2) return;
     for (int i=1;i<size;i++) {
         Move currentMove = moves[i];
+        int currentScore = scores[i];
         int j=i;
-        while (j>0 && scores[j-1]>scores[i]) {
+        while (j>0 && scores[j-1]>currentScore) {
             moves[j] = moves[j-1];
+            scores[j] = scores[j-1];
             j--;
         }
         moves[j] = currentMove;
+        scores[j] = currentScore;
     }
 }
 

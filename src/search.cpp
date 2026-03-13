@@ -129,8 +129,6 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
             (scoreType==UPPER && score<=alpha)) return score;
     }
 
-    if (depth)
-
     if (board.getGamePhase()>3 && depth>=3 && !inCheck) {
         board.doNullMove();
         int score = -alphaBeta(board, -beta, -beta+1, depth-3);
