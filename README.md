@@ -11,7 +11,8 @@ https://lichess.org/@/Blobfish-Bot
 - Evaluation
     - Material score
     - Piece square tables
-    - Pawn structure (passed pawns, doubled pawns)
+    - Pawn structure (passed pawns, doubled pawns, isolated pawns)
+    - Rooks on open files
     - Bishop pair bonus
     - Tapered evaluation
 - Search
