@@ -205,10 +205,27 @@ int positionalScore(Board& board, Color color, bool endgame){
 int pawnStructure(Board& board) {
     int score = 0;
 
-    // doubled pawns
+    int pawnsOnColumn[2][8];
+    const uint64_t wPawns = board.getPieceBitboard(WHITE,PAWN);
+    const uint64_t bPawns = board.getPieceBitboard(BLACK,PAWN);
     for (int i=0;i<8;i++){
-        if (countSetBits(board.getPieceBitboard(WHITE, PAWN) & BOARD_COLUMNS[i])>1) score += -25;
-        if (countSetBits(board.getPieceBitboard(BLACK, PAWN) & BOARD_COLUMNS[i])>1) score += 25;
+        pawnsOnColumn[0][i] = countSetBits(wPawns & BOARD_COLUMNS[i]);
+        pawnsOnColumn[1][i] = countSetBits(bPawns & BOARD_COLUMNS[i]);
+
+        // doubled pawn
+        if (pawnsOnColumn[0][i]>1) score += -20 * (pawnsOnColumn[0][i]-1);
+        if (pawnsOnColumn[1][i]>1) score += 20 * (pawnsOnColumn[1][i]-1);
+
+        // isolated pawns
+        if (pawnsOnColumn[0][i]!=0) {
+            if ((wPawns & NEIGHBORING_COLUMNS[i]) == 0)
+                score -= 15;
+        }
+        if (pawnsOnColumn[1][i]!=0) {
+            if ((bPawns & NEIGHBORING_COLUMNS[i]) == 0)
+                score += 15;
+        }
+
     }
     return score;
 }
@@ -246,7 +263,6 @@ int evaluatePosition(Board& board){
 
     openingScore += positionalScore(board, WHITE)-positionalScore(board, BLACK);
     endgameScore += positionalScore(board, WHITE, true) - positionalScore(board, BLACK, true);
-
 
     openingScore += score;
     endgameScore += score;

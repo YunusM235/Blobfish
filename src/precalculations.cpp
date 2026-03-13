@@ -219,6 +219,22 @@ const std::array<uint64_t, 8> BOARD_COLUMNS = [](){
     return arr;
 }();
 
+const std::array<uint64_t,8> NEIGHBORING_COLUMNS = []() {
+    std::array<uint64_t, 8> arr{};
+    for (int i=0;i<8;i++){
+        if (i==0) {
+            arr[i] = BOARD_COLUMNS[1];
+        } else if (i==7) {
+            arr[i] = BOARD_COLUMNS[6];
+        } else {
+            arr[i] = BOARD_COLUMNS[i-1] & BOARD_COLUMNS[i+1];
+        }
+    }
+    return arr;
+}();
+
+
+
 const std::array<std::array<uint64_t,64>, 2> PASSED_PAWNS = []() {
     std::array<std::array<uint64_t,64>, 2> arr{};
     for (int i=0;i<64;i++) {

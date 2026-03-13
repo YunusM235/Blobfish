@@ -51,6 +51,7 @@ extern const std::array<std::array<uint64_t,64>, 8> BOARD_RAYS;
 */
 
 extern const std::array<uint64_t,8> BOARD_COLUMNS;
+extern const std::array<uint64_t,8> NEIGHBORING_COLUMNS;
 
 extern const std::array<std::array<std::array<uint64_t, 64>, 7>,2>  PIECE_ZOBRIST;
 extern const uint64_t COLOR_ZOBRIST;
