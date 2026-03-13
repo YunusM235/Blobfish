@@ -227,7 +227,7 @@ const std::array<uint64_t,8> NEIGHBORING_COLUMNS = []() {
         } else if (i==7) {
             arr[i] = BOARD_COLUMNS[6];
         } else {
-            arr[i] = BOARD_COLUMNS[i-1] & BOARD_COLUMNS[i+1];
+            arr[i] = BOARD_COLUMNS[i-1] | BOARD_COLUMNS[i+1];
         }
     }
     return arr;
