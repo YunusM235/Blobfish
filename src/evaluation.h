@@ -3,6 +3,8 @@
 
 int mobilityScore(Board& board, Color color);
 
+int pawnShield(Board& board, Color color);
+
 int positionalScore(Board& board, Color color, bool endgame=false);
 
 int pawnStructure(Board& board);

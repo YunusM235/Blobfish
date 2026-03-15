@@ -189,13 +189,14 @@ int mirrorTable[] = {
     A1, B1, C1, D1, E1, F1, G1, H1,
 };
 
-constexpr int knightMobility[9]  = { -50, -25, -5,  5, 15, 20, 27, 31, 35 };
-constexpr int bishopMobility[14] = { -50, -20,  -15, -5, 5, 15, 25, 30, 35, 47, 49, 50, 50, 50};
-constexpr int rookMobility[15]   = { -50, -20, -5,  0,  5,  10, 15, 20, 23, 24, 25, 26, 27, 27, 27 };
-constexpr int queenMobility[28]  = { -30, -10, -5, 0,  0,  4,  8,  12, 15, 16, 17, 17, 17, 17,
-                                      17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17};
-
 int mobilityScore(Board& board, Color color) {
+
+    static constexpr int knightMobility[9]  = { -50, -25, -5,  5, 15, 20, 27, 31, 35 };
+    static constexpr int bishopMobility[14] = { -50, -20,  -15, -5, 5, 15, 25, 30, 35, 47, 49, 50, 50, 50};
+    static constexpr int rookMobility[15]   = { -50, -20, -5,  0,  5,  10, 15, 20, 23, 24, 25, 26, 27, 27, 27 };
+    static constexpr int queenMobility[28]  = { -30, -10, -5, 0,  0,  4,  8,  12, 15, 16, 17, 17, 17, 17,
+                                          17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17};
+
     Color otherColor = color == WHITE ? BLACK : WHITE;
 
     uint64_t pawnAttacks;
@@ -237,6 +238,48 @@ int mobilityScore(Board& board, Color color) {
         int index2 = _pext_u64(occupied, ROOK_MASK[pos]);
         score += queenMobility[countSetBits((BISHOP_ATTACKS[pos][index1] | ROOK_ATTACKS[pos][index2]) & safeSquares)];
     }
+
+    return score;
+}
+
+int pawnShield(Board& board, Color color) {
+
+    int kingPos = firstBit(board.getPieceBitboard(color, KING));
+    int kingColumn = kingPos % 8;
+    int kingRow = kingPos / 8;
+    if ((kingRow>=6&&color==WHITE)||(kingRow<=1&&color==BLACK)) return 0;
+    int direction = color==WHITE ? NORTH : SOUTH;
+    Piece pawn = color == WHITE ? W_PAWN : B_PAWN;
+
+    int score = 0;
+
+    int column1 = std::max(0, kingColumn - 1);
+    int column2 = std::min(7, kingColumn + 1);
+
+    Color otherColor = color==WHITE ? BLACK : WHITE;
+
+    static constexpr int SHIELD1  = 14;
+    static constexpr int SHIELD2   =  7;
+    static constexpr int OPEN_FILE    = 12;
+    static constexpr int SEMIOPEN_FILE = 7;
+
+    for (int column = column1; column <= column2; column++) {
+
+        if (board.getPieceOnSquare(kingPos+direction+(column-kingColumn))==pawn) {
+            score += SHIELD1;
+        } else if (board.getPieceOnSquare(kingPos+2*direction+(column-kingColumn))==pawn) {
+            score += SHIELD2;
+        } else if ((board.getPieceBitboard(color, PAWN)&BOARD_COLUMNS[column])==0) {
+            if ((board.getPieceBitboard(otherColor, PAWN)&BOARD_COLUMNS[column])==0) {
+                if (column==kingColumn) score -= 2*OPEN_FILE;
+                else score -= OPEN_FILE;
+            } else {
+                if (column==kingColumn) score -= 2*SEMIOPEN_FILE;
+                else score -= SEMIOPEN_FILE;
+            }
+        }
+    }
+    if (kingColumn >= 3 && kingColumn <= 5) score -= 15;
 
     return score;
 }
@@ -348,6 +391,7 @@ int evaluatePosition(Board& board){
     openingScore += mobility;
     endgameScore += mobility;
 
+    openingScore += pawnShield(board,WHITE)-pawnShield(board,BLACK);
 
     openingScore += score;
     endgameScore += score;

@@ -11,9 +11,11 @@ https://lichess.org/@/Blobfish-Bot
 - Evaluation
     - Material score
     - Piece square tables
+    - Mobility
     - Pawn structure (passed pawns, doubled pawns, isolated pawns)
     - Rooks on open files
     - Bishop pair bonus
+    - King pawn shield
     - Tapered evaluation
 - Search
     - Alpha-beta pruning
