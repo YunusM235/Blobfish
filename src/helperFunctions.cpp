@@ -43,10 +43,10 @@ std::string moveToString(Move move){
     std::string result;
     result = squareToName(move.sourceSquare()) + squareToName(move.targetSquare());
     if (move.moveType()== PROMOTION){
-        if (move.pawnPromotion()==P_QUEEN || move.pawnPromotion()==P_QUEEN) result += "q";
-        if (move.pawnPromotion()==P_ROOK || move.pawnPromotion()==P_ROOK) result += "r";
-        if (move.pawnPromotion()==P_BISHOP || move.pawnPromotion()==P_BISHOP) result += "b";
-        if (move.pawnPromotion()==P_KNIGHT || move.pawnPromotion()==P_KNIGHT) result += "n";
+        if (move.pawnPromotion()==P_QUEEN) result += "q";
+        if (move.pawnPromotion()==P_ROOK) result += "r";
+        if (move.pawnPromotion()==P_BISHOP) result += "b";
+        if (move.pawnPromotion()==P_KNIGHT) result += "n";
     }
     return result;
 }

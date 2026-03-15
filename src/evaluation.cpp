@@ -3,6 +3,7 @@
 #include "constants.h"
 #include "helperFunctions.h"
 #include "precalculations.h"
+#include <immintrin.h>
 
 
 // the piece square tables are from https://www.chessprogramming.org/Simplified_Evaluation_Function
@@ -188,6 +189,58 @@ int mirrorTable[] = {
     A1, B1, C1, D1, E1, F1, G1, H1,
 };
 
+constexpr int knightMobility[9]  = { -50, -25, -5,  5, 15, 20, 27, 31, 35 };
+constexpr int bishopMobility[14] = { -50, -20,  -15, -5, 5, 15, 25, 30, 35, 47, 49, 50, 50, 50};
+constexpr int rookMobility[15]   = { -50, -20, -5,  0,  5,  10, 15, 20, 23, 24, 25, 26, 27, 27, 27 };
+constexpr int queenMobility[28]  = { -30, -10, -5, 0,  0,  4,  8,  12, 15, 16, 17, 17, 17, 17,
+                                      17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17};
+
+int mobilityScore(Board& board, Color color) {
+    Color otherColor = color == WHITE ? BLACK : WHITE;
+
+    uint64_t pawnAttacks;
+    if (otherColor == WHITE)
+        pawnAttacks =  ((board.getPieceBitboard(WHITE, PAWN) << 9) & ~BOARD_COLUMNS[0])
+                     | ((board.getPieceBitboard(WHITE, PAWN) << 7) & ~BOARD_COLUMNS[7]);
+    else
+        pawnAttacks = ((board.getPieceBitboard(BLACK, PAWN) >> 7) & ~BOARD_COLUMNS[0])
+                         | ((board.getPieceBitboard(BLACK, PAWN) >> 9) & ~BOARD_COLUMNS[7]);
+
+    uint64_t safeSquares = ~(board.getColorBitboard(color) | pawnAttacks);
+    uint64_t occupied = board.getOccupiedBitboard();
+    int score=0;
+
+    uint64_t pieces = board.getPieceBitboard(color, KNIGHT);
+    while (pieces) {
+        int pos = popBit(pieces);
+        score += knightMobility[countSetBits(KNIGHT_ATTACKS[pos] & safeSquares)];
+    }
+
+    pieces = board.getPieceBitboard(color, BISHOP);
+    while (pieces) {
+        int pos = popBit(pieces);
+        int index = _pext_u64(occupied, BISHOP_MASK[pos]);
+        score += bishopMobility[countSetBits(BISHOP_ATTACKS[pos][index] & safeSquares)];
+    }
+
+    pieces = board.getPieceBitboard(color, ROOK);
+    while (pieces) {
+        int pos = popBit(pieces);
+        int index = _pext_u64(occupied, ROOK_MASK[pos]);
+        score += rookMobility[countSetBits(ROOK_ATTACKS[pos][index] & safeSquares)];
+    }
+
+    pieces = board.getPieceBitboard(color, QUEEN);
+    while (pieces) {
+        int pos = popBit(pieces);
+        int index1 = _pext_u64(occupied, BISHOP_MASK[pos]);
+        int index2 = _pext_u64(occupied, ROOK_MASK[pos]);
+        score += queenMobility[countSetBits((BISHOP_ATTACKS[pos][index1] | ROOK_ATTACKS[pos][index2]) & safeSquares)];
+    }
+
+    return score;
+}
+
 // calculate this incrementally in make/unmake
 int positionalScore(Board& board, Color color, bool endgame){
     const int (*squareTable)[64] = endgame ? endgamePieceSquareTable : pieceSquareTable;
@@ -290,6 +343,11 @@ int evaluatePosition(Board& board){
     int rook = rookOpenFile(board);
     openingScore += rook;
     endgameScore += rook * 3 / 2;
+
+    int mobility = mobilityScore(board,WHITE)-mobilityScore(board,BLACK);
+    openingScore += mobility;
+    endgameScore += mobility;
+
 
     openingScore += score;
     endgameScore += score;
