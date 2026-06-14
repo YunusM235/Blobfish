@@ -5,7 +5,6 @@
 #include <vector>
 #include "board.h"
 #include "constants.h"
-#include "evaluation.h"
 #include "helperFunctions.h"
 #include <chrono>
 #include <thread>

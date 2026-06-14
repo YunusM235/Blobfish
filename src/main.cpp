@@ -11,7 +11,6 @@
 #include <cstdio>
 #include <random>
 #include "nnue.h"
-#include "evaluation.h"
 #include "search.h"
 #include <filesystem>
 #include<fstream>
