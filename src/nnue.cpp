@@ -1,7 +1,6 @@
 #include "nnue.h"
 #include <fstream>
 #include <iostream>
-#include <algorithm>
 #include "helperFunctions.h"
 #include <immintrin.h>
 

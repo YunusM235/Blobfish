@@ -1,6 +1,5 @@
 #pragma once
 #include <cstdint>
-#include <climits>
 
 constexpr int MAX = INT16_MAX;
 constexpr int MIN = INT16_MIN;

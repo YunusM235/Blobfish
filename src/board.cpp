@@ -1,16 +1,10 @@
-#include <functional>
 #include <iostream>    
+#include <immintrin.h>
 #include "constants.h"
 #include "board.h"
-#include <string>
-#include <vector>
-#include <regex>
-#include <ctype.h>
-#include <map>
 #include "precalculations.h"
 #include "helperFunctions.h"
-#include <immintrin.h>
-
+#include <regex>
 
 void MoveList::sortMoves(int scores[256]) {
     if (size<2) return;

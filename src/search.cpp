@@ -1,26 +1,16 @@
 #include "search.h"
+#include <climits>
 #include <algorithm>
-#include <atomic>
-#include <functional>
 #include <vector>
 #include "board.h"
 #include "constants.h"
 #include "helperFunctions.h"
 #include <chrono>
-#include <thread>
-#include <signal.h>
 #include <cstring>
-#include "cmath"
 #include "precalculations.h"
 #include "nnue.h"
 
 extern std::vector<hashTableEntry> hashTable;
-
-using std::chrono::high_resolution_clock;
-using std::chrono::duration_cast;
-using std::chrono::duration;
-using std::chrono::milliseconds;
-using std::chrono::nanoseconds;
 
 std::chrono::time_point<std::chrono::steady_clock> softLimit;
 std::chrono::time_point<std::chrono::steady_clock> hardLimit;

@@ -6,20 +6,13 @@
 #include "helperFunctions.h"
 #include <chrono>
 #include <immintrin.h>
-#include <bits/std_thread.h>
 #include <csignal>
-#include <cstdio>
+#include <regex>
 #include <random>
 #include "nnue.h"
 #include "search.h"
 #include <filesystem>
-#include<fstream>
-
-using std::chrono::high_resolution_clock;
-using std::chrono::duration_cast;
-using std::chrono::duration;
-using std::chrono::milliseconds;
-using std::chrono::nanoseconds;
+#include <fstream>
 
 std::vector<hashTableEntry> hashTable;
 

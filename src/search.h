@@ -11,7 +11,6 @@ struct hashTableEntry {
     uint8_t depth;
     uint16_t flag;
 
-    int getDepth() const;
     ScoreType scoreType() const {
         return static_cast<ScoreType>(flag & 0b11);
     }

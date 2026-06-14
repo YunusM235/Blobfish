@@ -50,7 +50,7 @@ inline int countSetBits(uint64_t bitboard) {
 
 void printBitboard(uint64_t bitboard);
 
-std::string squareToName(uint square);
+std::string squareToName(unsigned int square);
 
 int nameToSquare(std::string input);
 
