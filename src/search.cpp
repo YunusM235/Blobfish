@@ -13,7 +13,6 @@
 #include <cstring>
 #include "cmath"
 #include "precalculations.h"
-#include "nnue.h"
 
 extern std::vector<hashTableEntry> hashTable;
 
@@ -35,8 +34,6 @@ int historyScore[2][64][64];
 
 bool stopSearch;
 int rootDepth = 0;
-
-AccumulatorStack accStack;
 
 void sortCaptures (const Board& board, MoveList& moves) {
     if (moves.getSize()<2) return;
@@ -85,7 +82,7 @@ int quiescence(Board& board, int alpha, int beta) {
     if (stopSearch) return 0;
     MoveList moves;
     board.generateCaptures(moves);
-    int eval = accStack.eval(board.getSideToMove());
+    int eval = evaluatePosition(board);
     if (eval>=beta) return eval;
     if (board.getGamePhase()>3 && eval + 1000 < alpha) return eval;
     if (eval>alpha) alpha = eval;
@@ -97,11 +94,9 @@ int quiescence(Board& board, int alpha, int beta) {
         PieceType capturedPiece = type_of(board.getPieceOnSquare(move.targetSquare()));
         if (board.getGamePhase()>3 && eval + pieceValue[0][capturedPiece] + 200 < alpha) continue;
         if (!board.isLegal(move)) continue;
-        accStack.addMove(board, move);
         board.makeMove(move);
         int score = -quiescence(board, -beta, -alpha);
         board.undoMove();
-        accStack.pop();
         if (score>=beta) return score;
         if (score>bestScore) {
             bestScore=score;
@@ -148,7 +143,7 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
     }
 
     if (!inCheck && depth <= 7) {
-        int eval = accStack.eval(board.getSideToMove());
+        int eval = evaluatePosition(board);
         if (eval - 120 * depth >= beta) {
             return eval - 120 * depth;
         }
@@ -161,11 +156,9 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
     Move ttMove{};
     if (hashTable[hashIndex].hash_key==board.getHashValue()) {
         ttMove = hashTable[hashIndex].bestMove;
-        accStack.addMove(board,ttMove);
         board.makeMove(ttMove);
         int score = -alphaBeta(board, -beta, -alpha, depth-1);
         board.undoMove();
-        accStack.pop();
         if (stopSearch) return 0;
         if (score>=beta) {
             hashTable[hashIndex] = {board.getHashValue(), ttMove, score, depth, LOWER};
@@ -201,7 +194,6 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
             if (i==1) {
                 searchedNonCaptures.appendMove(move);
             }
-            accStack.addMove(board, move);
             board.makeMove(move);
             int score;
             int reducedDepth = depth-1;
@@ -222,7 +214,6 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
             }
 
             board.undoMove();
-            accStack.pop();
             if (stopSearch) return 0;
             if (score>=beta) {
 
@@ -268,7 +259,6 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
 
 
 Move searchBestMove(Board &board, int searchTime) {
-    accStack.reset(board);
     std::memset(historyScore, 0, sizeof(historyScore));
     nodes=0;
     MoveList movesPseudoLegal;
@@ -313,7 +303,6 @@ Move searchBestMove(Board &board, int searchTime) {
             currBestMove = bestMove;
             failHigh = false;
             for (int i=moves.getSize()-1;i>=0;i--) {
-                accStack.addMove(board, moves.getMove(i));
                 board.makeMove(moves.getMove(i));
                 int score;
                 if (i==moves.getSize()-1) {
@@ -325,7 +314,6 @@ Move searchBestMove(Board &board, int searchTime) {
                     }
                 }
                 board.undoMove();
-                accStack.pop();
                 scores[i] = score;
                 if (score > currBestScore) {
                     currBestScore = score;
@@ -361,7 +349,6 @@ Move searchBestMove(Board &board, int searchTime) {
 }
 
 std::pair<Move, int> searchDataGeneration(Board& board, int maxNodes) {
-    accStack.reset(board);
     std::memset(historyScore, 0, sizeof(historyScore));
     std::memset(killerMoves,  0, sizeof(killerMoves));
     stopSearch = false;
@@ -386,11 +373,9 @@ std::pair<Move, int> searchDataGeneration(Board& board, int maxNodes) {
         int currBestScore = MIN;
 
         for (int i = 0; i < moves.getSize(); i++) {
-            accStack.addMove(board, moves.getMove(i));
             board.makeMove(moves.getMove(i));
             int score = -alphaBeta(board, MIN, -currBestScore, depth - 1);
             board.undoMove();
-            accStack.pop();
             if (stopSearch) break;
             if (score > currBestScore) {
                 currBestScore = score;

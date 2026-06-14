@@ -10,7 +10,6 @@
 #include <csignal>
 #include <cstdio>
 #include <random>
-#include "nnue.h"
 #include "evaluation.h"
 #include "search.h"
 #include <filesystem>
@@ -155,8 +154,6 @@ std::vector<std::string> split(const std::string& input) {
 }
 
 int main(int argc, char* argv[]) {
-
-    loadNNUE((std::filesystem::read_symlink("/proc/self/exe").parent_path() / "weights.bin").string());
 
     hashTable.reserve(TT_SIZE);
     for (int i=0;i<TT_SIZE;i++) {
