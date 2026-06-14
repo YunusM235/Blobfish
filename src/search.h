@@ -2,6 +2,7 @@
 #include "board.h"
 #include <cstdint>
 #include "helperFunctions.h"
+#include <chrono>
 
 struct hashTableEntry {
     uint64_t hash_key;
@@ -25,8 +26,13 @@ struct hashTableEntry {
     }
 };
 
+extern bool stopSearch;
+extern std::chrono::time_point<std::chrono::steady_clock> hardLimit;
+extern int nodeLimit;
+
 void sortCaptures (const Board& board, MoveList& moves);
 void sortNonCaptures(const Board& board, MoveList& moves, int depth);
 int quiescence(Board& board, int alpha, int beta);
 int alphaBeta(Board& board, int alpha, int beta, int depth);
 Move searchBestMove (Board& board, int searchTime);
+std::pair<Move, int> searchDataGeneration(Board& board, int maxNodes);

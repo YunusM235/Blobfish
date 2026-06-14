@@ -51,6 +51,58 @@ std::string moveToString(Move move){
     return result;
 }
 
+std::string boardToFen(const Board& board) {
+    static constexpr char pieceChars[2][7] = {
+        {'-', 'P', 'N', 'B', 'R', 'Q', 'K'},
+        {'-', 'p', 'n', 'b', 'r', 'q', 'k'}
+    };
+
+    std::string fen;
+
+    for (int i=7; i>=0; i--) {
+        int empty = 0;
+        for (int j=0; j<8; j++) {
+            Piece piece = board.getPieceOnSquare(i*8+j);
+            if (piece!=EMPTY) {
+                if (empty>0) {
+                    fen += static_cast<char>('0' + empty);
+                    empty = 0;
+                }
+                fen += pieceChars[color_of(piece)][type_of(piece)];
+                continue;
+            }
+            empty++;
+        }
+        if (empty>0) fen += std::to_string(empty);
+        if (i>0) fen += '/';
+    }
+
+    BoardState state = board.getBoardState();
+    fen += ' ';
+    fen += (board.getSideToMove() == WHITE) ? 'w' : 'b';
+
+    fen += ' ';
+
+    int castling = state.castlingRights();
+    if (castling == 0) {
+        fen += '-';
+    } else {
+        if (castling & 0b1000) fen += 'K';
+        if (castling & 0b0100) fen += 'Q';
+        if (castling & 0b0010) fen += 'k';
+        if (castling & 0b0001) fen += 'q';
+    }
+
+    fen += ' ';
+    fen += (state.enPassantSquare() == 0) ? "-" : squareToName(state.enPassantSquare());
+    fen += ' ';
+    fen += std::to_string(state.halfmoveClock());
+    fen += ' ';
+    fen += std::to_string(board.getPly() / 2 + 1);
+
+    return fen;
+}
+
 uint64_t randomInt64(){
     static std::mt19937 rnd = [](){
         std::random_device rd;

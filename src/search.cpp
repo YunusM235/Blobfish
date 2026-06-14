@@ -13,6 +13,7 @@
 #include <cstring>
 #include "cmath"
 #include "precalculations.h"
+#include "nnue.h"
 
 extern std::vector<hashTableEntry> hashTable;
 
@@ -26,12 +27,16 @@ std::chrono::time_point<std::chrono::steady_clock> softLimit;
 std::chrono::time_point<std::chrono::steady_clock> hardLimit;
 
 int nodes = 0;
+int nodeLimit = 0;
+
 
 Move killerMoves[64][2];
 int historyScore[2][64][64];
 
 bool stopSearch;
 int rootDepth = 0;
+
+AccumulatorStack accStack;
 
 void sortCaptures (const Board& board, MoveList& moves) {
     if (moves.getSize()<2) return;
@@ -75,11 +80,12 @@ int quiescence(Board& board, int alpha, int beta) {
     nodes++;
     if ((nodes&2047)==0) {
         if (std::chrono::steady_clock::now()>=hardLimit) return 0;
+        if (nodeLimit && nodes>=nodeLimit) stopSearch=true;
     }
     if (stopSearch) return 0;
     MoveList moves;
     board.generateCaptures(moves);
-    int eval = evaluatePosition(board);
+    int eval = accStack.eval(board.getSideToMove());
     if (eval>=beta) return eval;
     if (board.getGamePhase()>3 && eval + 1000 < alpha) return eval;
     if (eval>alpha) alpha = eval;
@@ -91,9 +97,11 @@ int quiescence(Board& board, int alpha, int beta) {
         PieceType capturedPiece = type_of(board.getPieceOnSquare(move.targetSquare()));
         if (board.getGamePhase()>3 && eval + pieceValue[0][capturedPiece] + 200 < alpha) continue;
         if (!board.isLegal(move)) continue;
+        accStack.addMove(board, move);
         board.makeMove(move);
         int score = -quiescence(board, -beta, -alpha);
         board.undoMove();
+        accStack.pop();
         if (score>=beta) return score;
         if (score>bestScore) {
             bestScore=score;
@@ -107,6 +115,7 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
     nodes++;
     if ((nodes&2047)==0) {
         if (std::chrono::steady_clock::now()>=hardLimit) stopSearch=true;
+        if (nodeLimit && nodes>=nodeLimit) stopSearch=true;
     }
     if (stopSearch) return 0;
     if (board.isRepetition() || board.getHalfMoveClock()==100) return 0;
@@ -139,7 +148,7 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
     }
 
     if (!inCheck && depth <= 7) {
-        int eval = evaluatePosition(board);
+        int eval = accStack.eval(board.getSideToMove());
         if (eval - 120 * depth >= beta) {
             return eval - 120 * depth;
         }
@@ -152,9 +161,11 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
     Move ttMove{};
     if (hashTable[hashIndex].hash_key==board.getHashValue()) {
         ttMove = hashTable[hashIndex].bestMove;
+        accStack.addMove(board,ttMove);
         board.makeMove(ttMove);
         int score = -alphaBeta(board, -beta, -alpha, depth-1);
         board.undoMove();
+        accStack.pop();
         if (stopSearch) return 0;
         if (score>=beta) {
             hashTable[hashIndex] = {board.getHashValue(), ttMove, score, depth, LOWER};
@@ -190,6 +201,7 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
             if (i==1) {
                 searchedNonCaptures.appendMove(move);
             }
+            accStack.addMove(board, move);
             board.makeMove(move);
             int score;
             int reducedDepth = depth-1;
@@ -210,6 +222,7 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
             }
 
             board.undoMove();
+            accStack.pop();
             if (stopSearch) return 0;
             if (score>=beta) {
 
@@ -255,6 +268,7 @@ int alphaBeta(Board& board, int alpha, int beta, int depth) {
 
 
 Move searchBestMove(Board &board, int searchTime) {
+    accStack.reset(board);
     std::memset(historyScore, 0, sizeof(historyScore));
     nodes=0;
     MoveList movesPseudoLegal;
@@ -270,7 +284,7 @@ Move searchBestMove(Board &board, int searchTime) {
     bestMove = moves.getMove(0);
     if (moves.getSize()==1) return bestMove;
     int softBound = searchTime * 6 / 10;
-    int hardBound = searchTime * 4;
+    int hardBound = searchTime * 5 / 2;
 
     auto start = std::chrono::steady_clock::now();
     softLimit = start + std::chrono::milliseconds(softBound);
@@ -299,6 +313,7 @@ Move searchBestMove(Board &board, int searchTime) {
             currBestMove = bestMove;
             failHigh = false;
             for (int i=moves.getSize()-1;i>=0;i--) {
+                accStack.addMove(board, moves.getMove(i));
                 board.makeMove(moves.getMove(i));
                 int score;
                 if (i==moves.getSize()-1) {
@@ -310,6 +325,7 @@ Move searchBestMove(Board &board, int searchTime) {
                     }
                 }
                 board.undoMove();
+                accStack.pop();
                 scores[i] = score;
                 if (score > currBestScore) {
                     currBestScore = score;
@@ -342,4 +358,54 @@ Move searchBestMove(Board &board, int searchTime) {
     }
 
     return bestMove;
+}
+
+std::pair<Move, int> searchDataGeneration(Board& board, int maxNodes) {
+    accStack.reset(board);
+    std::memset(historyScore, 0, sizeof(historyScore));
+    std::memset(killerMoves,  0, sizeof(killerMoves));
+    stopSearch = false;
+    nodes=0;
+    nodeLimit = maxNodes;
+    hardLimit = std::chrono::steady_clock::now() + std::chrono::seconds(180);
+
+    MoveList movesPseudoLegal;
+    MoveList moves;
+    board.generateNonCaptures(movesPseudoLegal);
+    board.generateCaptures(movesPseudoLegal);
+    for (int i=0;i<movesPseudoLegal.getSize();i++) {
+        if (board.isLegal(movesPseudoLegal.getMove(i))) moves.appendMove(movesPseudoLegal.getMove(i));
+    }
+
+    int bestScore=MIN;
+    Move bestMove = moves.getMove(0);
+
+    for (int depth = 1; depth<64; depth++) {
+        rootDepth = depth;
+        Move currBestMove = bestMove;
+        int currBestScore = MIN;
+
+        for (int i = 0; i < moves.getSize(); i++) {
+            accStack.addMove(board, moves.getMove(i));
+            board.makeMove(moves.getMove(i));
+            int score = -alphaBeta(board, MIN, -currBestScore, depth - 1);
+            board.undoMove();
+            accStack.pop();
+            if (stopSearch) break;
+            if (score > currBestScore) {
+                currBestScore = score;
+                currBestMove = moves.getMove(i);
+            }
+        }
+
+        if (stopSearch) break;
+        bestMove = currBestMove;
+        bestScore = currBestScore;
+        if (nodes >= nodeLimit) break;
+
+    }
+
+
+    nodeLimit = 0;
+    return {bestMove, bestScore};
 }

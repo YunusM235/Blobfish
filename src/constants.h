@@ -74,6 +74,7 @@ enum Square { A1,B1,C1,D1,E1,F1,G1,H1,
               A8,B8,C8,D8,E8,F8,G8,H8, NONE
 };
 
+// first 3 bits are piece type, 4th bit is color
 enum Piece {
     EMPTY, W_PAWN, W_KNIGHT, W_BISHOP, W_ROOK, W_QUEEN, W_KING,
     B_PAWN=9, B_KNIGHT, B_BISHOP, B_ROOK, B_QUEEN, B_KING

@@ -56,4 +56,6 @@ int nameToSquare(std::string input);
 
 std::string moveToString(Move move);
 
+std::string boardToFen(const Board& board);
+
 uint64_t randomInt64();
