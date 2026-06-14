@@ -1,3 +1,6 @@
+**This is an older version with handcrafted evaluation**
+
+---
 
 # Blobfish
 
