@@ -1,22 +1,28 @@
 
-# Blobfish
+<div align="center">
+
+<h3>Blobfish</h3>
 
 UCI chess engine written in C++
 
----
+<br>
 
-https://lichess.org/@/Blobfish-Bot
+[![lichess-rapid](https://lichess-shield.vercel.app/api?username=Blobfish-Bot&format=bullet)](https://lichess.org/@/Blobfish-Bot/perf/bullet)
+[![lichess-rapid](https://lichess-shield.vercel.app/api?username=Blobfish-Bot&format=blitz)](https://lichess.org/@/Blobfish-Bot/perf/blitz)
+[![lichess-rapid](https://lichess-shield.vercel.app/api?username=Blobfish-Bot&format=rapid)](https://lichess.org/@/Blobfish-Bot/perf/rapid)
+
+<br>
+
+</div>
+
 
 ## Features
-- Evaluation
-    - Material score
-    - Piece square tables
-    - Mobility
-    - Pawn structure (passed pawns, doubled pawns, isolated pawns)
-    - Rooks on open files
-    - Bishop pair bonus
-    - King pawn shield
-    - Tapered evaluation
+- NNUE evaluation
+    - basic 768 input features
+    - Accumulator of size 256
+    - Trained on 210M positions from self-play
+    - Trained using [bullet](https://github.com/jw1912/bullet)
+    - Inference uses SIMD instructions
 - Search
     - Alpha-beta pruning
     - Quiescence search
@@ -43,7 +49,7 @@ New features are tested using SPRT with cutechess-cli.
 
 You need g++ and make.
 
-The engine uses BMI2 instructions. So if your CPU is really old the engine might not compile.
+The engine uses BMI2 and AVX2 instructions. So if your CPU is really old the engine might not compile/run.
 
 ---
 
@@ -58,6 +64,10 @@ make
 
 https://www.chessprogramming.org
 
-https://talkchess.com/viewforum.php?f=7
-
 https://www.youtube.com/playlist?list=PLmN0neTso3Jxh8ZIylk74JpwfiWNI76Cs
+
+https://official-stockfish.github.io/docs/nnue-pytorch-wiki/docs/nnue.html
+
+https://github.com/jw1912/bullet/blob/main/docs/1-basics.md
+
+https://talkchess.com/viewforum.php?f=7
